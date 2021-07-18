@@ -1,30 +1,13 @@
-from face_detection.constants import *
-from PIL import Image
-import numpy as np
-import matplotlib.pyplot as plt
-import os, json
 from typing import List
+import os, json
+import numpy as np
+from skimage.transform import resize as img_resize
+from torchvision import transforms
+import torch
 
-def ellipse_to_Rectangle_label(x : float, y : float, a : float, b : float, shamt=1.0):
-    if a < b:               # make sure a is the larger one
-        a, b = b, a
-    # the shape of origin label file gives is ellipse, so I need to transform it into rectangle region
-    x1 = x - b / shamt      
-    y1 = y - a / shamt
-    x2 = x + b / shamt
-    y2 = y + a / shamt
-    return x1, y1, x2, y2
+from face_detection.utils.transform import safe_to_numpy
+from face_detection.utils.bbox import ellipse_to_Rectangle_label
 
-# use plt to draw bounding box on the picture
-def draw_one_boundingbox(x1, y1, x2, y2, color=None, width=None, alpha=None):
-    corners = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
-    for i, _ in enumerate(corners):             # draw the line clock wise
-        p1 = corners[i % len(corners)]
-        p2 = corners[(i + 1) % len(corners)]
-        xx = [p1[0], p2[0]]
-        yy = [p1[1], p2[1]]
-        plt.plot(xx, yy, color, linewidth=width, alpha=alpha)
-    
 # get all the origin label files' path
 def get_all_ellipseList_path(file_dir : str) -> List[str]:
     result = [file_dir + "/" + file for file in os.listdir(file_dir) if "ellipse" in file]
@@ -56,11 +39,23 @@ def get_mate_data(label_file_paths : List[str], dump_path : str):
     with open(dump_path, "w", encoding="utf-8") as fp:
         json.dump(obj=target_dict, fp=fp, ensure_ascii=False, indent=4)
 
-
-def visualise_one_sample(img_path : str, labels : List[List[float]], bounding_box_dict : dict =BOUNDONGING_BOX_MARGIN_DICT):
-    img = Image.open(img_path)
-    img = np.array(img)
-    plt.imshow(img)
-    for label in labels:
-        draw_one_boundingbox(*label, **bounding_box_dict)
-    plt.show()
+# preprocess the image to get the same size after extraction
+def preprocess_image(img : np.ndarray, min_size : int = 600, max_size : int = 1000) -> np.ndarray:
+    """
+        input img must be shaped as [C, W, H]
+    """
+    img = safe_to_numpy(img)
+    if img.shape[-1] in [3, 4]:
+        img = np.transpose(img, axes=[2, 0, 1])
+    C, H, W = img.shape
+    # scale into the frame
+    scale = min(min_size / min(H, W), max_size / max(H, W))
+    img = img / 255
+    img = img_resize(image=img, output_shape=[C, H * scale, W * scale], mode="reflect", anti_aliasing=False)
+    # then normalize the picture
+    normalize = transforms.Normalize(
+        mean=(0.485, 0.456, 0.406),
+        std=(0.229, 0.224, 0.225)
+    )
+    img : torch.Tensor = normalize(torch.tensor(img))
+    return img.numpy()
