@@ -3,9 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-data/
-!./data/README.md 
-!./data/meta.json
+data/2002
+data/2003
+data/FDDB-folds
 
 # C extensions
 *.so

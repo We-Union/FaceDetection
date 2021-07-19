@@ -134,7 +134,7 @@ class AbstractFasterRcnn(nn.Module):
         self.train()
         return bboxes, labels, scores
 
-    def set_optimizer(self):
+    def set_optimizer(self) -> optim:
         """
             set optimizer for the class
         """
@@ -146,9 +146,10 @@ class AbstractFasterRcnn(nn.Module):
                     params += [{'params': [value], 'lr': lr * 2, 'weight_decay': 0}]
                 else:
                     params += [{'params': [value], 'lr': lr, 'weight_decay': cig.weight_decay}]
+                    
         if cig.optimizer_name == "Adam":
             self.optimizer = optim.Adam(params)
-        else:
+        if cig.optimizer_name == "SGD":
             self.optimizer = optim.SGD(params, momentum=0.9)
         return self.optimizer
     

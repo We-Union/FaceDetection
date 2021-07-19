@@ -1,3 +1,4 @@
+from typing import Union
 from face_detection.utils.transform import ProposalCreator
 from face_detection.utils.bbox import generate_anchor_base
 from torch import nn 
@@ -28,7 +29,7 @@ class RPN(nn.Module):
         init_with_normal(self.score, 0, 0.01)
         init_with_normal(self.loc, 0, 0.01)
     
-    def forward(self, x, img_size, scale = 1.):
+    def forward(self, x : torch.Tensor, img_size : Union[list, tuple], scale : float = 1.):
         n, _, hh, ww = x.shape
         anchor = enumrate_all_shift_anchor(
             np.array(self.anchor_base),

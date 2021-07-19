@@ -21,4 +21,7 @@ from face_detection.utils.transform import AnchorTargetCreator
 from face_detection.utils.transform import ProposalCreator
 from face_detection.utils.transform import ProposalTargetCreator
 
+from face_detection.utils.loss import smooth_l1_loss
+from face_detection.utils.loss import fast_rcnn_loc_loss
+
 __version__ = cig.Version
