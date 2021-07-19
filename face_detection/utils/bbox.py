@@ -1,5 +1,6 @@
 from typing import List
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 from PIL import Image
 from face_detection.Config import cig
@@ -15,14 +16,23 @@ def ellipse_to_Rectangle_label(x : float, y : float, a : float, b : float, shamt
     return x1, y1, x2, y2
 
 # use plt to draw bounding box on the picture
-def draw_one_boundingbox(x1, y1, x2, y2, color=None, width=None, alpha=None):
+def draw_one_boundingbox(x1, y1, x2, y2, color=None, width=None, alpha=None, ax=None):
     corners = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
-    for i, _ in enumerate(corners):             # draw the line clock wise
-        p1 = corners[i % len(corners)]
-        p2 = corners[(i + 1) % len(corners)]
-        xx = [p1[0], p2[0]]
-        yy = [p1[1], p2[1]]
-        plt.plot(xx, yy, color, linewidth=width, alpha=alpha)
+    if ax is None:
+        ax = plt.subplot(1, 1, 1)   
+
+    rec = plt.Rectangle(
+        xy=(x1, y1),
+        width=x2 - x1,
+        height=y2 - y1,
+        linewidth=width, 
+        alpha=alpha,
+        color="c",
+        fill=False
+    )
+
+    ax.add_patch(rec)
+
 
 # draw a picture and its labels on the pyplot
 def visualise_one_sample(img_path : str, labels : List[List[float]], bbox_dict : dict =cig.BBOX_MARGIN_DICT):
